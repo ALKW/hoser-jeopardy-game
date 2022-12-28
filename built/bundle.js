@@ -13818,9 +13818,9 @@ var Setup = function (_Component) {
           'div',
           { className: 'setup-screen' },
           _react2.default.createElement(
-            'h1',
+            'h2',
             null,
-            'JEOPARDY!'
+            'HOSER JEOPARDY!'
           ),
           _react2.default.createElement(_Players2.default, null),
           _react2.default.createElement('br', null),
@@ -30663,9 +30663,9 @@ var FinalJeopardy = function (_Component) {
           'div',
           { className: 'setup-screen' },
           _react2.default.createElement(
-            'h1',
+            'h2',
             null,
-            'Final Jeopardy'
+            'Final Hoser Jeopardy'
           ),
           _react2.default.createElement(
             'button',

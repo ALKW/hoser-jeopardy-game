@@ -65,7 +65,7 @@ class Setup extends Component {
       <div className='game-container'>
         {!this.state.creatingGame &&
           <div className='setup-screen'>
-            <h1>JEOPARDY!</h1>
+            <h2>HOSER JEOPARDY!</h2>
             <Players />
             <br/>
             <div className='file-info'>Game file: {this.state.gameName || '--'}</div>

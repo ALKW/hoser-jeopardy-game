@@ -57,7 +57,7 @@ class FinalJeopardy extends Component {
       <div className="game-container final-jeopardy" style={{textAlign: "center"}}>
         {!this.state.showCategory && !this.state.showQuestion &&
         <div className="setup-screen">
-          <h1>Final Jeopardy</h1>
+          <h2>Final Hoser Jeopardy</h2>
           <button onClick={() => {this.setState({showCategory: true})}}>Show Category</button>
         </div>
         }
