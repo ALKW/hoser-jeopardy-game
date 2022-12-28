@@ -1,27 +1,10 @@
 # jeopardy-game
-Create and play your own game of Jeopardy. I threw this together to play with my family over Christmas time. Used React, React-router, Redux, and Electron.
+Create and play your own game of Jeopardy. Based on [denvaar/jeopardy](https://github.com/denvaar/jeopardy-game) game
 
-# Installation
-There's an app in the `dist` directory.
-To run the app for development, comment out the necessary things and run:
+# Running the Game
+Switch to the directory and run the following command:
 
-```npm install```
-
-```npm run-script watch```
-
-```npm start```
-
-To package the app for OSX:
-
-```npm run-script build```
-
-```electron-packager ./jeopardy Jeopardy --version 1.2.4 --platform=darwin --out=[insert output path here] --arch=all --ignore="(node_modules)"```
-
-# Testing
-
-First unzip the zip file in dist/ and then run
-
-```npm test```
+```rm -r node_modules && npm install --legacy-peer-deps && npm start```
 
 ## Screen shots
 <img width="635" alt="screen shot 2016-12-17 at 3 46 48 pm" src="https://cloud.githubusercontent.com/assets/10538978/21290243/3abb4ae8-c470-11e6-83cb-67bdc88f6952.png">
