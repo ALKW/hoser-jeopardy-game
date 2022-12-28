@@ -13913,20 +13913,23 @@ var Row = exports.Row = function (_Component) {
       var _this2 = this;
 
       var cells = [];
-      for (var i = 0; i < 6; i++) {
-        var category = this.props.categories[i][0].category;
+      for (var col = 0; col < 6; col++) {
+        var category = this.props.categories[col][0].category;
 
         //Finding all Q's values that match the rows point value
-        var isAnswered = this.props.categories[i].find(function (q) {
+        var isAnswered = (this.props.categories[col].find(function (q) {
           return q.value === _this2.props.value;
-        }).isAnswered;
+        }) || { isAnswered: true }).isAnswered /* Handle the Weekly Wager */;
+
+        var isDailyDouble = this.props.dailyDoubleCol === col && this.props.isDailyDoubleRow;
 
         cells.push(_react2.default.createElement(_QuestionCell2.default, {
-          key: i,
+          key: col,
           value: this.props.value,
           isAnswered: isAnswered,
           openQuestion: this.props.openQuestion,
-          category: Object.keys(this.props.categories)[i]
+          category: Object.keys(this.props.categories)[col],
+          isDailyDouble: isDailyDouble
         }));
       }
       return _react2.default.createElement(
@@ -13971,8 +13974,8 @@ var __importDefault = undefined && undefined.__importDefault || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParserOptions = void 0;
-var lodash_escaperegexp_1 = __importDefault(__webpack_require__(301));
-var lodash_isnil_1 = __importDefault(__webpack_require__(302));
+var lodash_escaperegexp_1 = __importDefault(__webpack_require__(302));
+var lodash_isnil_1 = __importDefault(__webpack_require__(303));
 
 var ParserOptions = function ParserOptions(opts) {
     _classCallCheck(this, ParserOptions);
@@ -14034,10 +14037,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CsvParserStream = void 0;
-var string_decoder_1 = __webpack_require__(303);
+var string_decoder_1 = __webpack_require__(304);
 var stream_1 = __webpack_require__(128);
-var transforms_1 = __webpack_require__(304);
-var parser_1 = __webpack_require__(310);
+var transforms_1 = __webpack_require__(305);
+var parser_1 = __webpack_require__(311);
 
 var CsvParserStream = function (_stream_1$Transform) {
     _inherits(CsvParserStream, _stream_1$Transform);
@@ -14717,7 +14720,7 @@ exports.RowParser = RowParser;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ColumnFormatter = exports.QuotedColumnParser = exports.NonQuotedColumnParser = exports.ColumnParser = void 0;
-var ColumnParser_1 = __webpack_require__(312);
+var ColumnParser_1 = __webpack_require__(313);
 Object.defineProperty(exports, "ColumnParser", { enumerable: true, get: function get() {
     return ColumnParser_1.ColumnParser;
   } });
@@ -14946,7 +14949,7 @@ var _App = __webpack_require__(290);
 
 var _App2 = _interopRequireDefault(_App);
 
-var _FinalJeopardy = __webpack_require__(296);
+var _FinalJeopardy = __webpack_require__(297);
 
 var _FinalJeopardy2 = _interopRequireDefault(_FinalJeopardy);
 
@@ -14954,11 +14957,11 @@ var _Setup = __webpack_require__(126);
 
 var _Setup2 = _interopRequireDefault(_Setup);
 
-var _Edit = __webpack_require__(297);
+var _Edit = __webpack_require__(298);
 
 var _Edit2 = _interopRequireDefault(_Edit);
 
-__webpack_require__(313);
+__webpack_require__(314);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -30202,11 +30205,15 @@ var _Question = __webpack_require__(293);
 
 var _Question2 = _interopRequireDefault(_Question);
 
-var _Categories = __webpack_require__(294);
+var _DailyDouble = __webpack_require__(294);
+
+var _DailyDouble2 = _interopRequireDefault(_DailyDouble);
+
+var _Categories = __webpack_require__(295);
 
 var _Categories2 = _interopRequireDefault(_Categories);
 
-var _RowContainer = __webpack_require__(295);
+var _RowContainer = __webpack_require__(296);
 
 var _RowContainer2 = _interopRequireDefault(_RowContainer);
 
@@ -30255,8 +30262,13 @@ var App = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
+    var row = Math.floor(Math.random() * 5);
+    var col = Math.floor(Math.random() * 6);
     _this.state = {
-      showQuestion: false
+      showQuestion: false,
+      // Rows and columns start at 0
+      dailyDoubleCol: col,
+      dailyDoubleRow: row
     };
     _this.openQuestion = _this.openQuestion.bind(_this);
     /*this.closeQuestion = this.closeQuestion.bind(this);*/
@@ -30289,12 +30301,21 @@ var App = function (_Component) {
 
   _createClass(App, [{
     key: 'openQuestion',
-    value: function openQuestion(category, value) {
+    value: function openQuestion(category, value, isDailyDouble, wager) {
+
+      console.log('dailyDouble Square: col: ' + this.state.dailyDoubleCol + ', row: ' + this.state.dailyDoubleRow);
+      console.log('isDailyDouble: ' + isDailyDouble);
+      console.log('this.props.currentVersion ' + this.props.currentVersion + ' category ' + category + 'this.props.game[this.props.currentVersion].categories  ' + JSON.stringify(this.props.game[this.props.currentVersion].categories));
 
       var question = this.props.game[this.props.currentVersion].categories[category].find(function (question) {
         return question.value === value;
       });
-      this.setState({ showQuestion: question, category: category });
+      if (wager) {
+        console.log('set question value to wager: ' + wager);
+        question.value = parseInt(wager);
+      }
+
+      this.setState({ showQuestion: question, category: category, isDailyDouble: isDailyDouble });
       /* send answer to admin pannel */
 
       _electron.ipcRenderer.send('send-answer-to-admin', _extends({}, question, { lastCorrectPlayer: this.props.lastCorrectPlayer }));
@@ -30305,6 +30326,13 @@ var App = function (_Component) {
       if (this.props.currentVersion === 'finalJeopardy') return _react2.default.createElement('div', null);
       var showGame = Object.keys(this.props.game[this.props.currentVersion].categories).length > 0;
       var showQuestion = this.state.showQuestion;
+      var category = this.state.category;
+      var isDailyDouble = this.state.isDailyDouble && this.props.currentVersion === "jeopardy";
+      var playerName = this.props.lastCorrectPlayer;
+      var player = this.props.players.find(function (player) {
+        return player.name === playerName;
+      });
+      var playerPoints = player ? player.score : 0;
       return _react2.default.createElement(
         'div',
         { className: 'game-container' },
@@ -30321,10 +30349,13 @@ var App = function (_Component) {
           _react2.default.createElement(_RowContainer2.default, {
             currentVersion: this.props.currentVersion,
             categories: this.props.game[this.props.currentVersion].categories,
-            openQuestion: this.openQuestion
+            openQuestion: this.openQuestion,
+            dailyDoubleCol: this.state.dailyDoubleCol,
+            dailyDoubleRow: this.state.dailyDoubleRow
           })
         ),
-        showQuestion && _react2.default.createElement(_Question2.default, { question: this.state.showQuestion, closeQuestion: this.closeQuestion })
+        !isDailyDouble && showQuestion && _react2.default.createElement(_Question2.default, { question: this.state.showQuestion, closeQuestion: this.closeQuestion }),
+        isDailyDouble && showQuestion && _react2.default.createElement(_DailyDouble2.default, { openQuestion: this.openQuestion, question: this.state.showQuestion, category: category, playerName: playerName, playerPoints: playerPoints })
       );
     }
   }]);
@@ -30454,7 +30485,7 @@ exports.default = function (props) {
     "td",
     {
       onClick: function onClick() {
-        props.openQuestion(props.category, props.value);
+        props.openQuestion(props.category, props.value, props.isDailyDouble);
       }
     },
     "$",
@@ -30496,6 +30527,75 @@ exports.default = function (props) {
 
 
 Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = __webpack_require__(4);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Made into a pure function, as class notation was not necessary
+exports.default = function (props) {
+    var wager = 0;
+
+    function handleChange(e) {
+        wager = e.target.value;
+    }
+
+    return _react2.default.createElement(
+        'div',
+        { className: 'question' },
+        _react2.default.createElement(
+            'h2',
+            null,
+            'Weekly Wager. Pog!'
+        ),
+        _react2.default.createElement(
+            'div',
+            { className: 'wager-box' },
+            _react2.default.createElement(
+                'h2',
+                null,
+                'The Weekly Wager'
+            ),
+            _react2.default.createElement(
+                'div',
+                null,
+                props.playerName
+            ),
+            _react2.default.createElement('input', { type: 'text',
+                onChange: handleChange,
+                placeholder: "Up to $" + props.playerPoints }),
+            _react2.default.createElement(
+                'div',
+                null,
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick(event) {
+                            if (wager > props.playerPoints || wager === Number.NaN) {
+                                alert(props.playerName + ' cannot wager more than ' + props.playerPoints + '.');
+                            } else {
+                                console.log('' + JSON.stringify(props.question));
+                                props.openQuestion(props.category, props.question.value, false /* isDailyDouble */, wager);
+                            }
+                        } },
+                    'Wager'
+                )
+            )
+        )
+    );
+};
+
+/***/ }),
+/* 295 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -30522,7 +30622,7 @@ exports.default = function (props) {
 };
 
 /***/ }),
-/* 295 */
+/* 296 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30547,16 +30647,16 @@ exports.default = function (props) {
   return _react2.default.createElement(
     'tbody',
     null,
-    _react2.default.createElement(_Row2.default, { value: 200 * multiplier, openQuestion: props.openQuestion, categories: props.categories }),
-    _react2.default.createElement(_Row2.default, { value: 400 * multiplier, openQuestion: props.openQuestion, categories: props.categories }),
-    _react2.default.createElement(_Row2.default, { value: 600 * multiplier, openQuestion: props.openQuestion, categories: props.categories }),
-    _react2.default.createElement(_Row2.default, { value: 800 * multiplier, openQuestion: props.openQuestion, categories: props.categories }),
-    _react2.default.createElement(_Row2.default, { value: 1000 * multiplier, openQuestion: props.openQuestion, categories: props.categories })
+    _react2.default.createElement(_Row2.default, { value: 200 * multiplier, openQuestion: props.openQuestion, categories: props.categories, dailyDoubleCol: props.dailyDoubleCol, isDailyDoubleRow: 0 === props.dailyDoubleRow }),
+    _react2.default.createElement(_Row2.default, { value: 400 * multiplier, openQuestion: props.openQuestion, categories: props.categories, dailyDoubleCol: props.dailyDoubleCol, isDailyDoubleRow: 1 === props.dailyDoubleRow }),
+    _react2.default.createElement(_Row2.default, { value: 600 * multiplier, openQuestion: props.openQuestion, categories: props.categories, dailyDoubleCol: props.dailyDoubleCol, isDailyDoubleRow: 2 === props.dailyDoubleRow }),
+    _react2.default.createElement(_Row2.default, { value: 800 * multiplier, openQuestion: props.openQuestion, categories: props.categories, dailyDoubleCol: props.dailyDoubleCol, isDailyDoubleRow: 3 === props.dailyDoubleRow }),
+    _react2.default.createElement(_Row2.default, { value: 1000 * multiplier, openQuestion: props.openQuestion, categories: props.categories, dailyDoubleCol: props.dailyDoubleCol, isDailyDoubleRow: 4 === props.dailyDoubleRow })
   );
 };
 
 /***/ }),
-/* 296 */
+/* 297 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30724,7 +30824,7 @@ var mapStateToProps = function mapStateToProps(state) {
 exports.default = (0, _reactRedux.connect)(mapStateToProps, { setPlayerWager: _actions.setPlayerWager, updateFinalScore: _actions.updateFinalScore })(FinalJeopardy);
 
 /***/ }),
-/* 297 */
+/* 298 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30748,7 +30848,7 @@ var _reactRouter = __webpack_require__(41);
 
 var _electron = __webpack_require__(44);
 
-var _CsvParser = __webpack_require__(298);
+var _CsvParser = __webpack_require__(299);
 
 var _CsvParser2 = _interopRequireDefault(_CsvParser);
 
@@ -31164,7 +31264,7 @@ var Questions = function Questions(_ref) {
 };
 
 /***/ }),
-/* 298 */
+/* 299 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31180,7 +31280,7 @@ exports.default = parseCsv;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var csv = __webpack_require__(299);
+var csv = __webpack_require__(300);
 
 function parseCsv(input) {
     var rows = [];
@@ -31254,7 +31354,7 @@ function fromEntries(iterable) {
 }
 
 /***/ }),
-/* 299 */
+/* 300 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31289,7 +31389,7 @@ var __exportStar = undefined && undefined.__exportStar || function (m, exports) 
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseString = exports.parseFile = exports.parseStream = exports.parse = exports.ParserOptions = exports.CsvParserStream = void 0;
-var fs = __importStar(__webpack_require__(300));
+var fs = __importStar(__webpack_require__(301));
 var stream_1 = __webpack_require__(128);
 var ParserOptions_1 = __webpack_require__(129);
 var CsvParserStream_1 = __webpack_require__(130);
@@ -31321,13 +31421,13 @@ exports.parseString = function (string, options) {
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 300 */
+/* 301 */
 /***/ (function(module, exports) {
 
 module.exports = require("fs");
 
 /***/ }),
-/* 301 */
+/* 302 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31500,7 +31600,7 @@ function escapeRegExp(string) {
 module.exports = escapeRegExp;
 
 /***/ }),
-/* 302 */
+/* 303 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31541,13 +31641,13 @@ function isNil(value) {
 module.exports = isNil;
 
 /***/ }),
-/* 303 */
+/* 304 */
 /***/ (function(module, exports) {
 
 module.exports = require("string_decoder");
 
 /***/ }),
-/* 304 */
+/* 305 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31555,18 +31655,18 @@ module.exports = require("string_decoder");
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HeaderTransformer = exports.RowTransformerValidator = void 0;
-var RowTransformerValidator_1 = __webpack_require__(305);
+var RowTransformerValidator_1 = __webpack_require__(306);
 Object.defineProperty(exports, "RowTransformerValidator", { enumerable: true, get: function get() {
     return RowTransformerValidator_1.RowTransformerValidator;
   } });
-var HeaderTransformer_1 = __webpack_require__(306);
+var HeaderTransformer_1 = __webpack_require__(307);
 Object.defineProperty(exports, "HeaderTransformer", { enumerable: true, get: function get() {
     return HeaderTransformer_1.HeaderTransformer;
   } });
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 305 */
+/* 306 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31694,7 +31794,7 @@ exports.RowTransformerValidator = RowTransformerValidator;
 //# sourceMappingURL=RowTransformerValidator.js.map
 
 /***/ }),
-/* 306 */
+/* 307 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31709,10 +31809,10 @@ var __importDefault = undefined && undefined.__importDefault || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HeaderTransformer = void 0;
-var lodash_isundefined_1 = __importDefault(__webpack_require__(307));
+var lodash_isundefined_1 = __importDefault(__webpack_require__(308));
 var lodash_isfunction_1 = __importDefault(__webpack_require__(131));
-var lodash_uniq_1 = __importDefault(__webpack_require__(308));
-var lodash_groupby_1 = __importDefault(__webpack_require__(309));
+var lodash_uniq_1 = __importDefault(__webpack_require__(309));
+var lodash_groupby_1 = __importDefault(__webpack_require__(310));
 
 var HeaderTransformer = function () {
     function HeaderTransformer(parserOptions) {
@@ -31841,7 +31941,7 @@ exports.HeaderTransformer = HeaderTransformer;
 //# sourceMappingURL=HeaderTransformer.js.map
 
 /***/ }),
-/* 307 */
+/* 308 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31879,7 +31979,7 @@ function isUndefined(value) {
 module.exports = isUndefined;
 
 /***/ }),
-/* 308 */
+/* 309 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -32772,7 +32872,7 @@ function noop() {
 module.exports = uniq;
 
 /***/ }),
-/* 309 */
+/* 310 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35094,7 +35194,7 @@ module.exports = groupBy;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(110)(module)))
 
 /***/ }),
-/* 310 */
+/* 311 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35102,7 +35202,7 @@ module.exports = groupBy;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuotedColumnParser = exports.NonQuotedColumnParser = exports.ColumnParser = exports.Token = exports.Scanner = exports.RowParser = exports.Parser = void 0;
-var Parser_1 = __webpack_require__(311);
+var Parser_1 = __webpack_require__(312);
 Object.defineProperty(exports, "Parser", { enumerable: true, get: function get() {
     return Parser_1.Parser;
   } });
@@ -35131,7 +35231,7 @@ Object.defineProperty(exports, "QuotedColumnParser", { enumerable: true, get: fu
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 311 */
+/* 312 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35236,7 +35336,7 @@ exports.Parser = Parser;
 //# sourceMappingURL=Parser.js.map
 
 /***/ }),
-/* 312 */
+/* 313 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35281,16 +35381,16 @@ exports.ColumnParser = ColumnParser;
 //# sourceMappingURL=ColumnParser.js.map
 
 /***/ }),
-/* 313 */
+/* 314 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(314);
+var content = __webpack_require__(315);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(318)(content, {});
+var update = __webpack_require__(319)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -35307,21 +35407,21 @@ if(false) {
 }
 
 /***/ }),
-/* 314 */
+/* 315 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(315)();
+exports = module.exports = __webpack_require__(316)();
 // imports
 
 
 // module
-exports.push([module.i, "@font-face { \n  font-family: Gyparody Regular;\n  src: url(" + __webpack_require__(316) + ");\n} \n@font-face { \n  font-family: Korinna Bold;\n  src: url(" + __webpack_require__(317) + ");\n} \n\n\n.title-img {\n  width: 100%;\n}\n\n.setup-screen {\n  background: #147bce;\n  color: #a6d7ff;\n  text-shadow: 2px 2px #004e8c;\n  font-family: 'Gyparody Regular', sans-serif;\n  text-align: center;\n  font-size: 30px;\n  height: 100%;\n  margin-top: -5px;\n}\n\nh1 {\n  font-size: 24vw;\n}\n.setup-screen h1 {\n  margin-top: 5px;\n  margin-bottom: 0;\n  font-size: 24vw;\n}\n\n\n.file-info {\n  font-family: monospace;\n  font-size: 15px;\n  position: absolute;\n  bottom: 79px;\n  margin: 0 auto;\n  width: 100%;\n}\n\n.setup-screen h2 {\n  margin-top: 5px;\n}\n\n.setup-screen .menu {\n  position: absolute;\n  bottom: 0;\n  width: 100%;\n  height: 75px;\n}\n\n.menu button {\n  margin-left: 10px;\n}\n\n.start-button, .start-button:hover {\n  background: #6bbb6b;\n}\n\n.game-container { \n  position: absolute;\n  width: 100%;\n  text-align: center;\n  height: 100%;\n  background: #000;\n  margin: -8px;\n}\n\n.category {\n  border: 1px solid #fff;\n  width: 15%;\n  margin: 5px;\n  height: 100%;\n  display: inline-block;\n}\n.title {\n  background: #004e8c;\n  width: 100%;\n  height: 100px; \n}\n\ntable {\n  font-family: 'Archivo Black', sans-serif;\n  color: #fff;\n  width: 100%;\n  height: 100%;\n  table-layout: fixed;\nborder-collapse: separate;\n           border-spacing: 5px;\n}\n\n\nth, td {\n  box-shadow: 0 0 5px #000000 inset;\n  text-shadow: 2px 2px #000;\n  text-transform: uppercase;\n  font-size: 20px;\n  text-align: center;\n  vertical-align: middle;\n  background: #0d6bb6;\n}\n\nth {\n  padding: 20px 0 20px 0;\n}\n\ntd {\n  cursor: default;\n  color: #c68b33;\n  text-shadow: darkgoldenrod;\n  font-size: 35px;\n  text-shadow: 2px 2px 5px #000;\n}\n\ntd:hover {\n  background: #147bce;\n  color: #e7a646;\n}\n\nbutton {\n  cursor: pointer;\n  margin-top: 10px;\n  margin-right: 5px;\n  height: 35px;\n  min-width: 100px;\n  background: #e7a646;\n  color: #383838;\n  border: none;\n  font-size: 14px;\n  border-radius: 3px;\n  -webkit-appearance: none;\n}\nbutton:hover { background: #f1ba69; }\n\n.disabled-button, .disabled-button:hover {\n  background: #0d6bb6;\n  color: #004e8c;\n  cursor: default;\n  pointer-events: none;\n}\n\ninput[type=\"text\"], textarea {\n  padding-left: 7px;\n  height: 25px;\n  border-radius: 4px;\n  border: 1px solid #ddd;\n  font-size: 14px;\n  color: #545454;\n  margin-top: 10px;\n}\n\n.question {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n  padding: 20px 50px 20px 50px;\n}\n\n.admin-pannel {\n  background: #fff;\n  padding: 10px;\n  font-family: Helvetica Neue, sans-serif;\n}\n\n.admin-pannel .players {\n  text-align: center;\n  border: 1px solid #545454;\n  border-radius: 2px;\n  bottom: 10px;\n  width: 97%;\n  position: absolute; \n}\n\n.players-disabled {\n  pointer-events: none;\n  opacity: 0.2;\n}\n\n\n.player-text {\n  font-family: 'Permanent Marker', cursive;\n  margin: 0;\n  color: #fff;\n}\n\n.scoreboard .player-text {\n  border-bottom: 2px solid #f1ba69;\n  font-size: 20px;\n}\n\n.scoreboard .score {\n  font-family: 'Archivo Black', sans-serif;\n  font-size: 20px;\n  color: #fff;\n}\n\n.scoreboard .player {\n  background: #0d6bb6;\n  width: 180px;\n  box-shadow: 0 0 5px #000000 inset;\n  padding: 5px;\n  text-align: center;\n  margin: 3px;\n}\n\n.admin-pannel .current-question p {\n  font-size: 25px;\n}\n\n.players span {\n  width: 100px;\n  display: inline-block;\n  text-align: center;\n}\n\n.players div {\n  height: 50px;\n  line-height: 50px;\n}\n.correct-button {\n  background: #58b158;\n}\n.correct-button:hover {\n  background: #67d067;\n}\n.incorrect-button {\n  background: #dc5050;\n}\n.incorrect-button:hover {\n  background: #f95a5a;\n}\n\n.disabled {\n  background: #757575;\n}\n.disabled button {\n  color: #757575;\n  background: #757575;\n  pointer-events: none;\n}\n\n.message {\n  text-align: center;\n  height: 50px;\n  color: #2d612d;\n  margin: -10px;\n  line-height: 50px;\n  background: #58b158;\n}\n\n.wager-box {\n  text-align: center;\n  background: #ffffff;\n  color: #000;\n  font-size: 14px;\n  font-family: sans-serif;\n  margin-top: 5px;\n  border: 4px solid #004e8c;\n  border-radius: 4px;\n  text-shadow: none;\n  padding: 5px;\n  width: 300px;\n  margin: 0 auto;\n}\n\n.wager-box button, .wager-box button:hover {\n  background:  #58b158;\n}\n\n.final-jeopardy {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n}\n\n.edit-screen {\n  background: #fff;\n  font-family: 'Archivo Black', sans-serif;\n  text-align: center;\n  height: 100%;\n}\n\n.edit-screen input {\n  width: 300px;\n}\n\n.question-buttons {\n  padding: 10px 0 5px 0;\n}\n\n.edit-question {\n  border-radius: 2px;\n  margin: 5px;\n  cursor: pointer;\n  text-align: center;\n  padding: 5px;\n  background: #147bce;\n  color: #a6d7ff;\n  width: 85px;\n  display: inline-block;\n}\n\n@keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: none; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n@-webkit-keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: 0 0 0; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n.blink {\n    -webkit-animation: blink 1.0s linear infinite;\n    -moz-animation: blink 1.0s linear infinite;\n    -ms-animation: blink 1.0s linear infinite;\n    -o-animation: blink 1.0s linear infinite;\n    animation: blink 1.0s linear infinite;\n}\n\n.edit-screen .category-section {\n  text-align: center;\n}\n\n.tab-container {\n  border-bottom: 5px solid #ddd;\n}\n.tab {\n  margin-right: 10px;\n  text-transform: uppercase;\n  cursor: pointer;\n  padding: 3px 3px 0 3px;\n  color: #545454;\n}\n.tab:hover {\n  background: aliceblue;\n  color: #0d6bb6;\n}\n\n.cancel {\n  background: #ddd;\n}\n.cancel:hover {\n  background: #ddd !important;\n}\n\n.edit-screen h4 {\n  text-transform: uppercase;\n}\n\n.back-button {\n  position: fixed;\n  background: #a6d7ff;\n  top: 10px;\n  cursor: pointer;\n  left: 10px;\n  line-height: 90px;\n  text-align: center;\n  border-radius: 50%;\n  color: #fff;\n  height: 90px;\n  width: 90px;\n  box-shadow: 0 0 17px #757575;\n}\n.back-button:hover {\n  background: #8ec2ec;\n}\n", ""]);
+exports.push([module.i, "@font-face { \n  font-family: Gyparody Regular;\n  src: url(" + __webpack_require__(317) + ");\n} \n@font-face { \n  font-family: Korinna Bold;\n  src: url(" + __webpack_require__(318) + ");\n} \n\n\n.title-img {\n  width: 100%;\n}\n\n.setup-screen {\n  background: #147bce;\n  color: #a6d7ff;\n  text-shadow: 2px 2px #004e8c;\n  font-family: 'Gyparody Regular', sans-serif;\n  text-align: center;\n  font-size: 30px;\n  height: 100%;\n  margin-top: -5px;\n}\n\nh1 {\n  font-size: 24vw;\n}\n.setup-screen h1 {\n  margin-top: 5px;\n  margin-bottom: 0;\n  font-size: 24vw;\n}\n\n\n.file-info {\n  font-family: monospace;\n  font-size: 15px;\n  position: absolute;\n  bottom: 79px;\n  margin: 0 auto;\n  width: 100%;\n}\n\n.setup-screen h2 {\n  margin-top: 5px;\n}\n\n.setup-screen .menu {\n  position: absolute;\n  bottom: 0;\n  width: 100%;\n  height: 75px;\n}\n\n.menu button {\n  margin-left: 10px;\n}\n\n.start-button, .start-button:hover {\n  background: #6bbb6b;\n}\n\n.game-container { \n  position: absolute;\n  width: 100%;\n  text-align: center;\n  height: 100%;\n  background: #000;\n  margin: -8px;\n}\n\n.category {\n  border: 1px solid #fff;\n  width: 15%;\n  margin: 5px;\n  height: 100%;\n  display: inline-block;\n}\n.title {\n  background: #004e8c;\n  width: 100%;\n  height: 100px; \n}\n\ntable {\n  font-family: 'Archivo Black', sans-serif;\n  color: #fff;\n  width: 100%;\n  height: 100%;\n  table-layout: fixed;\nborder-collapse: separate;\n           border-spacing: 5px;\n}\n\n\nth, td {\n  box-shadow: 0 0 5px #000000 inset;\n  text-shadow: 2px 2px #000;\n  text-transform: uppercase;\n  font-size: 20px;\n  text-align: center;\n  vertical-align: middle;\n  background: #0d6bb6;\n}\n\nth {\n  padding: 20px 0 20px 0;\n}\n\ntd {\n  cursor: default;\n  color: #c68b33;\n  text-shadow: darkgoldenrod;\n  font-size: 35px;\n  text-shadow: 2px 2px 5px #000;\n}\n\ntd:hover {\n  background: #147bce;\n  color: #e7a646;\n}\n\nbutton {\n  cursor: pointer;\n  margin-top: 10px;\n  margin-right: 5px;\n  height: 35px;\n  min-width: 100px;\n  background: #e7a646;\n  color: #383838;\n  border: none;\n  font-size: 14px;\n  border-radius: 3px;\n  -webkit-appearance: none;\n}\nbutton:hover { background: #f1ba69; }\n\n.disabled-button, .disabled-button:hover {\n  background: #0d6bb6;\n  color: #004e8c;\n  cursor: default;\n  pointer-events: none;\n}\n\ninput[type=\"text\"], textarea {\n  padding-left: 7px;\n  height: 25px;\n  border-radius: 4px;\n  border: 1px solid #ddd;\n  font-size: 14px;\n  color: #545454;\n  margin-top: 10px;\n}\n\n.question {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n  padding: 20px 50px 20px 50px;\n}\n\n.dailyDoubleQuestion {\n  display: \"none\";\n}\n\n.admin-pannel {\n  background: #fff;\n  padding: 10px;\n  font-family: Helvetica Neue, sans-serif;\n}\n\n.admin-pannel .players {\n  text-align: center;\n  border: 1px solid #545454;\n  border-radius: 2px;\n  bottom: 10px;\n  width: 97%;\n  position: absolute; \n}\n\n.players-disabled {\n  pointer-events: none;\n  opacity: 0.2;\n}\n\n\n.player-text {\n  font-family: 'Permanent Marker', cursive;\n  margin: 0;\n  color: #fff;\n}\n\n.scoreboard .player-text {\n  border-bottom: 2px solid #f1ba69;\n  font-size: 20px;\n}\n\n.scoreboard .score {\n  font-family: 'Archivo Black', sans-serif;\n  font-size: 20px;\n  color: #fff;\n}\n\n.scoreboard .player {\n  background: #0d6bb6;\n  width: 180px;\n  box-shadow: 0 0 5px #000000 inset;\n  padding: 5px;\n  text-align: center;\n  margin: 3px;\n}\n\n.admin-pannel .current-question p {\n  font-size: 25px;\n}\n\n.players span {\n  width: 100px;\n  display: inline-block;\n  text-align: center;\n}\n\n.players div {\n  height: 50px;\n  line-height: 50px;\n}\n.correct-button {\n  background: #58b158;\n}\n.correct-button:hover {\n  background: #67d067;\n}\n.incorrect-button {\n  background: #dc5050;\n}\n.incorrect-button:hover {\n  background: #f95a5a;\n}\n\n.disabled {\n  background: #757575;\n}\n.disabled button {\n  color: #757575;\n  background: #757575;\n  pointer-events: none;\n}\n\n.message {\n  text-align: center;\n  height: 50px;\n  color: #2d612d;\n  margin: -10px;\n  line-height: 50px;\n  background: #58b158;\n}\n\n.wager-box {\n  text-align: center;\n  background: #ffffff;\n  color: #000;\n  font-size: 14px;\n  font-family: sans-serif;\n  margin-top: 5px;\n  border: 4px solid #004e8c;\n  border-radius: 4px;\n  text-shadow: none;\n  padding: 5px;\n  width: 300px;\n  margin: 0 auto;\n}\n\n.wager-box button, .wager-box button:hover {\n  background:  #58b158;\n}\n\n.final-jeopardy {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n}\n\n.edit-screen {\n  background: #fff;\n  font-family: 'Archivo Black', sans-serif;\n  text-align: center;\n  height: 100%;\n}\n\n.edit-screen input {\n  width: 300px;\n}\n\n.question-buttons {\n  padding: 10px 0 5px 0;\n}\n\n.edit-question {\n  border-radius: 2px;\n  margin: 5px;\n  cursor: pointer;\n  text-align: center;\n  padding: 5px;\n  background: #147bce;\n  color: #a6d7ff;\n  width: 85px;\n  display: inline-block;\n}\n\n@keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: none; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n@-webkit-keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: 0 0 0; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n.blink {\n    -webkit-animation: blink 1.0s linear infinite;\n    -moz-animation: blink 1.0s linear infinite;\n    -ms-animation: blink 1.0s linear infinite;\n    -o-animation: blink 1.0s linear infinite;\n    animation: blink 1.0s linear infinite;\n}\n\n.edit-screen .category-section {\n  text-align: center;\n}\n\n.tab-container {\n  border-bottom: 5px solid #ddd;\n}\n.tab {\n  margin-right: 10px;\n  text-transform: uppercase;\n  cursor: pointer;\n  padding: 3px 3px 0 3px;\n  color: #545454;\n}\n.tab:hover {\n  background: aliceblue;\n  color: #0d6bb6;\n}\n\n.cancel {\n  background: #ddd;\n}\n.cancel:hover {\n  background: #ddd !important;\n}\n\n.edit-screen h4 {\n  text-transform: uppercase;\n}\n\n.back-button {\n  position: fixed;\n  background: #a6d7ff;\n  top: 10px;\n  cursor: pointer;\n  left: 10px;\n  line-height: 90px;\n  text-align: center;\n  border-radius: 50%;\n  color: #fff;\n  height: 90px;\n  width: 90px;\n  box-shadow: 0 0 17px #757575;\n}\n.back-button:hover {\n  background: #8ec2ec;\n}\n", ""]);
 
 // exports
 
 
 /***/ }),
-/* 315 */
+/* 316 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35377,19 +35477,19 @@ module.exports = function () {
 };
 
 /***/ }),
-/* 316 */
+/* 317 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__.p + "43cbe0c4070437c1a6417c2b28d66fae.ttf";
 
 /***/ }),
-/* 317 */
+/* 318 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__.p + "54a6662b22ad63f95d47fb1c6fa91cbf.ttf";
 
 /***/ }),
-/* 318 */
+/* 319 */
 /***/ (function(module, exports) {
 
 /*

@@ -32,7 +32,7 @@ const appReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
 
     case UPDATE_FINAL_SCORE:
-      let playerIndex = state.players.findIndex(p => {return p.name === action.player});
+      let playerIndex = state.players.findIndex(p => { return p.name === action.player });
       return {
         ...state,
         players: [
@@ -46,7 +46,7 @@ const appReducer = (state = INITIAL_STATE, action) => {
       };
 
     case SET_WAGER:
-      let i = state.players.findIndex(p => {return p.name === action.player});
+      let i = state.players.findIndex(p => { return p.name === action.player });
       return {
         ...state,
         players: [

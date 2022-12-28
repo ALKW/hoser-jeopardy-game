@@ -8,7 +8,7 @@ export default props => {
   return (
     <td
       onClick={() => {
-        props.openQuestion(props.category, props.value);
+        props.openQuestion(props.category, props.value, props.isDailyDouble);
       }}
     >
       ${props.value}

@@ -6,21 +6,24 @@ import QuestionCell from "./QuestionCell";
 export class Row extends Component {
   render() {
     const cells = [];
-    for (let i = 0; i < 6; i++) {
-      const category = this.props.categories[i][0].category;
+    for (let col = 0; col < 6; col++) {
+      const category = this.props.categories[col][0].category;
 
       //Finding all Q's values that match the rows point value
-      const isAnswered = this.props.categories[i].find(q => {
+      const isAnswered = (this.props.categories[col].find(q => {
         return q.value === this.props.value;
-      }).isAnswered;
+      }) || { isAnswered: true }).isAnswered /* Handle the Weekly Wager */;
+
+      const isDailyDouble = this.props.dailyDoubleCol === col && this.props.isDailyDoubleRow;
 
       cells.push(
         <QuestionCell
-          key={i}
+          key={col}
           value={this.props.value}
           isAnswered={isAnswered}
           openQuestion={this.props.openQuestion}
-          category={Object.keys(this.props.categories)[i]}
+          category={Object.keys(this.props.categories)[col]}
+          isDailyDouble={isDailyDouble}
         />
       );
     }
