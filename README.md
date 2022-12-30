@@ -4,7 +4,7 @@ Create and play your own game of Jeopardy. Based on [denvaar/jeopardy](https://g
 # Running the Game
 Switch to the directory and run the following command:
 
-```rm -r node_modules; npm install --legacy-peer-deps && npm start```
+```rm -r node_modules; npm install --legacy-peer-deps && npm run build && npm start```
 
 ## Screen shots
 <img width="635" alt="screen shot 2016-12-17 at 3 46 48 pm" src="https://cloud.githubusercontent.com/assets/10538978/21290243/3abb4ae8-c470-11e6-83cb-67bdc88f6952.png">
