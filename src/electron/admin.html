@@ -35,17 +35,17 @@
     var lastCorrectPlayer = "";
 
     ipcRenderer.on('send-answer-to-admin-reply', function (event, data) {
-      lastCorrectPlayer = data.lastCorrectPlayer;
+      lastCorrectPlayer = data.lastCorrectPlayer ? data.lastCorrectPlayer : /* First Player */ document.querySelectorAll(".player")[0].getElementsByTagName("span")[0].textContent;
       document.getElementById('question').innerHTML = data.question;
       document.getElementById('answer').innerHTML = data.answer;
       document.querySelector(".players").classList.remove("players-disabled");
       value = data.value;
-      dailyDoubleWager = data.wager ? data.wager : -1;
+      dailyDoubleWager = isFinite(data.wager) ? data.wager : -1;
       isDailyDoubleWagerScreen = data.isDailyDouble;
       playersLeft = totalPlayers;
 
       // Dont let players answer during wager screen
-      if(isDailyDoubleWagerScreen) {
+      if (isDailyDoubleWagerScreen) {
         document.querySelector(".players").classList.add("players-disabled");
       }
 
