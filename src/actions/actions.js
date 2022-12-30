@@ -57,7 +57,7 @@ export const loadGameData = (data) => {
 const _loadGameData = (data) => {
   return {
     type: LOAD_GAME_DATA,
-    data: data
+    data: data,
   }
 }
 

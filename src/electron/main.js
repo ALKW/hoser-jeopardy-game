@@ -47,6 +47,8 @@ app.on('ready', function() {
       question: args.question,
       answer: args.answer,
       value: args.value,
+      wager: isFinite(args.wager) ? args.wager : -1,
+      isDailyDouble: args.isDailyDouble,
       lastCorrectPlayer: args.lastCorrectPlayer
     });
   });
@@ -61,7 +63,9 @@ app.on('ready', function() {
 
   ipc.on('launch-admin-pannel', function(event, args) {
     adminWindow.send('launch-admin-pannel', {
-      players: args.players
+      players: args.players,
+      dailyDoubleCol: args.dailyDoubleCol,
+      dailyDoubleRow: args.dailyDoubleRow
     });
     adminWindow.show();
   });

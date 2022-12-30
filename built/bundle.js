@@ -13772,16 +13772,20 @@ var Setup = function (_Component) {
   }, {
     key: 'onStartGame',
     value: function onStartGame() {
+      var dailyDoubleCol = Math.floor(Math.random() * 6);
+      var dailyDoubleRow = Math.floor(Math.random() * 5);
       _electron.ipcRenderer.send('launch-admin-pannel', {
         players: this.props.players.map(function (player) {
           return player.name;
-        })
+        }),
+        dailyDoubleCol: dailyDoubleCol,
+        dailyDoubleRow: dailyDoubleRow
       });
       _electron.ipcRenderer.send('launch-scoreboard', {
         players: this.props.players
       });
       this.props.loadGameData(this.state.data);
-      _reactRouter.hashHistory.push('/play');
+      _reactRouter.hashHistory.push({ pathname: '/play', query: { dailyDoubleCol: dailyDoubleCol, dailyDoubleRow: dailyDoubleRow } });
     }
   }, {
     key: 'onLoadGame',
@@ -30262,16 +30266,13 @@ var App = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
-    var row = Math.floor(Math.random() * 5);
-    var col = Math.floor(Math.random() * 6);
     _this.state = {
       showQuestion: false,
       // Rows and columns start at 0
-      dailyDoubleCol: col,
-      dailyDoubleRow: row
+      dailyDoubleCol: parseInt(_this.props.location.query.dailyDoubleCol),
+      dailyDoubleRow: parseInt(_this.props.location.query.dailyDoubleRow)
     };
     _this.openQuestion = _this.openQuestion.bind(_this);
-    /*this.closeQuestion = this.closeQuestion.bind(this);*/
 
     _electron.ipcRenderer.on('update-score', function (event, data) {
       _this.props.updateScore(data.value, data.player, _this.state.category, _this.state.showQuestion);
@@ -30302,23 +30303,14 @@ var App = function (_Component) {
   _createClass(App, [{
     key: 'openQuestion',
     value: function openQuestion(category, value, isDailyDouble, wager) {
-
-      console.log('dailyDouble Square: col: ' + this.state.dailyDoubleCol + ', row: ' + this.state.dailyDoubleRow);
-      console.log('isDailyDouble: ' + isDailyDouble);
-      console.log('this.props.currentVersion ' + this.props.currentVersion + ' category ' + category + 'this.props.game[this.props.currentVersion].categories  ' + JSON.stringify(this.props.game[this.props.currentVersion].categories));
-
       var question = this.props.game[this.props.currentVersion].categories[category].find(function (question) {
         return question.value === value;
       });
-      if (wager) {
-        console.log('set question value to wager: ' + wager);
-        question.value = parseInt(wager);
-      }
 
       this.setState({ showQuestion: question, category: category, isDailyDouble: isDailyDouble });
       /* send answer to admin pannel */
 
-      _electron.ipcRenderer.send('send-answer-to-admin', _extends({}, question, { lastCorrectPlayer: this.props.lastCorrectPlayer }));
+      _electron.ipcRenderer.send('send-answer-to-admin', _extends({}, question, { wager: parseInt(wager), isDailyDouble: isDailyDouble, lastCorrectPlayer: this.props.lastCorrectPlayer }));
     }
   }, {
     key: 'render',
@@ -30354,7 +30346,7 @@ var App = function (_Component) {
             dailyDoubleRow: this.state.dailyDoubleRow
           })
         ),
-        !isDailyDouble && showQuestion && _react2.default.createElement(_Question2.default, { question: this.state.showQuestion, closeQuestion: this.closeQuestion }),
+        !isDailyDouble && showQuestion && _react2.default.createElement(_Question2.default, { question: this.state.showQuestion }),
         isDailyDouble && showQuestion && _react2.default.createElement(_DailyDouble2.default, { openQuestion: this.openQuestion, question: this.state.showQuestion, category: category, playerName: playerName, playerPoints: playerPoints })
       );
     }
@@ -30418,10 +30410,14 @@ var Players = function (_Component) {
   _createClass(Players, [{
     key: 'handleInput',
     value: function handleInput(event) {
+      // enter key press
       if (event.keyCode === 13) {
-        /* enter key press */
-        this.props.addPlayer(event.target.value);
-        event.target.value = '';
+        if (event.target.value === '') {
+          alert("Please enter a non empty player name");
+        } else {
+          this.props.addPlayer(event.target.value);
+          event.target.value = '';
+        }
       }
     }
   }, {
@@ -30574,10 +30570,11 @@ exports.default = function (props) {
                 _react2.default.createElement(
                     'button',
                     { onClick: function onClick(event) {
-                            if (wager > props.playerPoints || wager === Number.NaN) {
+                            if (wager > props.playerPoints || isNaN(wager)) {
                                 alert(props.playerName + ' cannot wager more than ' + props.playerPoints + '.');
+                            } else if (isNaN(wager)) {
+                                alert('What are you doing? ' + wager + ' is not a number you idiot');
                             } else {
-                                console.log('' + JSON.stringify(props.question));
                                 props.openQuestion(props.category, props.question.value, false /* isDailyDouble */, wager);
                             }
                         } },
@@ -35415,7 +35412,7 @@ exports = module.exports = __webpack_require__(316)();
 
 
 // module
-exports.push([module.i, "@font-face { \n  font-family: Gyparody Regular;\n  src: url(" + __webpack_require__(317) + ");\n} \n@font-face { \n  font-family: Korinna Bold;\n  src: url(" + __webpack_require__(318) + ");\n} \n\n\n.title-img {\n  width: 100%;\n}\n\n.setup-screen {\n  background: #147bce;\n  color: #a6d7ff;\n  text-shadow: 2px 2px #004e8c;\n  font-family: 'Gyparody Regular', sans-serif;\n  text-align: center;\n  font-size: 30px;\n  height: 100%;\n  margin-top: -5px;\n}\n\nh1 {\n  font-size: 24vw;\n}\n.setup-screen h1 {\n  margin-top: 5px;\n  margin-bottom: 0;\n  font-size: 24vw;\n}\n\n\n.file-info {\n  font-family: monospace;\n  font-size: 15px;\n  position: absolute;\n  bottom: 79px;\n  margin: 0 auto;\n  width: 100%;\n}\n\n.setup-screen h2 {\n  margin-top: 5px;\n}\n\n.setup-screen .menu {\n  position: absolute;\n  bottom: 0;\n  width: 100%;\n  height: 75px;\n}\n\n.menu button {\n  margin-left: 10px;\n}\n\n.start-button, .start-button:hover {\n  background: #6bbb6b;\n}\n\n.game-container { \n  position: absolute;\n  width: 100%;\n  text-align: center;\n  height: 100%;\n  background: #000;\n  margin: -8px;\n}\n\n.category {\n  border: 1px solid #fff;\n  width: 15%;\n  margin: 5px;\n  height: 100%;\n  display: inline-block;\n}\n.title {\n  background: #004e8c;\n  width: 100%;\n  height: 100px; \n}\n\ntable {\n  font-family: 'Archivo Black', sans-serif;\n  color: #fff;\n  width: 100%;\n  height: 100%;\n  table-layout: fixed;\nborder-collapse: separate;\n           border-spacing: 5px;\n}\n\n\nth, td {\n  box-shadow: 0 0 5px #000000 inset;\n  text-shadow: 2px 2px #000;\n  text-transform: uppercase;\n  font-size: 20px;\n  text-align: center;\n  vertical-align: middle;\n  background: #0d6bb6;\n}\n\nth {\n  padding: 20px 0 20px 0;\n}\n\ntd {\n  cursor: default;\n  color: #c68b33;\n  text-shadow: darkgoldenrod;\n  font-size: 35px;\n  text-shadow: 2px 2px 5px #000;\n}\n\ntd:hover {\n  background: #147bce;\n  color: #e7a646;\n}\n\nbutton {\n  cursor: pointer;\n  margin-top: 10px;\n  margin-right: 5px;\n  height: 35px;\n  min-width: 100px;\n  background: #e7a646;\n  color: #383838;\n  border: none;\n  font-size: 14px;\n  border-radius: 3px;\n  -webkit-appearance: none;\n}\nbutton:hover { background: #f1ba69; }\n\n.disabled-button, .disabled-button:hover {\n  background: #0d6bb6;\n  color: #004e8c;\n  cursor: default;\n  pointer-events: none;\n}\n\ninput[type=\"text\"], textarea {\n  padding-left: 7px;\n  height: 25px;\n  border-radius: 4px;\n  border: 1px solid #ddd;\n  font-size: 14px;\n  color: #545454;\n  margin-top: 10px;\n}\n\n.question {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n  padding: 20px 50px 20px 50px;\n}\n\n.dailyDoubleQuestion {\n  display: \"none\";\n}\n\n.admin-pannel {\n  background: #fff;\n  padding: 10px;\n  font-family: Helvetica Neue, sans-serif;\n}\n\n.admin-pannel .players {\n  text-align: center;\n  border: 1px solid #545454;\n  border-radius: 2px;\n  bottom: 10px;\n  width: 97%;\n  position: absolute; \n}\n\n.players-disabled {\n  pointer-events: none;\n  opacity: 0.2;\n}\n\n\n.player-text {\n  font-family: 'Permanent Marker', cursive;\n  margin: 0;\n  color: #fff;\n}\n\n.scoreboard .player-text {\n  border-bottom: 2px solid #f1ba69;\n  font-size: 20px;\n}\n\n.scoreboard .score {\n  font-family: 'Archivo Black', sans-serif;\n  font-size: 20px;\n  color: #fff;\n}\n\n.scoreboard .player {\n  background: #0d6bb6;\n  width: 180px;\n  box-shadow: 0 0 5px #000000 inset;\n  padding: 5px;\n  text-align: center;\n  margin: 3px;\n}\n\n.admin-pannel .current-question p {\n  font-size: 25px;\n}\n\n.players span {\n  width: 100px;\n  display: inline-block;\n  text-align: center;\n}\n\n.players div {\n  height: 50px;\n  line-height: 50px;\n}\n.correct-button {\n  background: #58b158;\n}\n.correct-button:hover {\n  background: #67d067;\n}\n.incorrect-button {\n  background: #dc5050;\n}\n.incorrect-button:hover {\n  background: #f95a5a;\n}\n\n.disabled {\n  background: #757575;\n}\n.disabled button {\n  color: #757575;\n  background: #757575;\n  pointer-events: none;\n}\n\n.message {\n  text-align: center;\n  height: 50px;\n  color: #2d612d;\n  margin: -10px;\n  line-height: 50px;\n  background: #58b158;\n}\n\n.wager-box {\n  text-align: center;\n  background: #ffffff;\n  color: #000;\n  font-size: 14px;\n  font-family: sans-serif;\n  margin-top: 5px;\n  border: 4px solid #004e8c;\n  border-radius: 4px;\n  text-shadow: none;\n  padding: 5px;\n  width: 300px;\n  margin: 0 auto;\n}\n\n.wager-box button, .wager-box button:hover {\n  background:  #58b158;\n}\n\n.final-jeopardy {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n}\n\n.edit-screen {\n  background: #fff;\n  font-family: 'Archivo Black', sans-serif;\n  text-align: center;\n  height: 100%;\n}\n\n.edit-screen input {\n  width: 300px;\n}\n\n.question-buttons {\n  padding: 10px 0 5px 0;\n}\n\n.edit-question {\n  border-radius: 2px;\n  margin: 5px;\n  cursor: pointer;\n  text-align: center;\n  padding: 5px;\n  background: #147bce;\n  color: #a6d7ff;\n  width: 85px;\n  display: inline-block;\n}\n\n@keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: none; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n@-webkit-keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: 0 0 0; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n.blink {\n    -webkit-animation: blink 1.0s linear infinite;\n    -moz-animation: blink 1.0s linear infinite;\n    -ms-animation: blink 1.0s linear infinite;\n    -o-animation: blink 1.0s linear infinite;\n    animation: blink 1.0s linear infinite;\n}\n\n.edit-screen .category-section {\n  text-align: center;\n}\n\n.tab-container {\n  border-bottom: 5px solid #ddd;\n}\n.tab {\n  margin-right: 10px;\n  text-transform: uppercase;\n  cursor: pointer;\n  padding: 3px 3px 0 3px;\n  color: #545454;\n}\n.tab:hover {\n  background: aliceblue;\n  color: #0d6bb6;\n}\n\n.cancel {\n  background: #ddd;\n}\n.cancel:hover {\n  background: #ddd !important;\n}\n\n.edit-screen h4 {\n  text-transform: uppercase;\n}\n\n.back-button {\n  position: fixed;\n  background: #a6d7ff;\n  top: 10px;\n  cursor: pointer;\n  left: 10px;\n  line-height: 90px;\n  text-align: center;\n  border-radius: 50%;\n  color: #fff;\n  height: 90px;\n  width: 90px;\n  box-shadow: 0 0 17px #757575;\n}\n.back-button:hover {\n  background: #8ec2ec;\n}\n", ""]);
+exports.push([module.i, "@font-face { \n  font-family: Gyparody Regular;\n  src: url(" + __webpack_require__(317) + ");\n} \n@font-face { \n  font-family: Korinna Bold;\n  src: url(" + __webpack_require__(318) + ");\n} \n\n\n.title-img {\n  width: 100%;\n}\n\n.setup-screen {\n  background: #147bce;\n  color: #a6d7ff;\n  text-shadow: 2px 2px #004e8c;\n  font-family: 'Gyparody Regular', sans-serif;\n  text-align: center;\n  font-size: 30px;\n  height: 100%;\n  margin-top: -5px;\n}\n\nh1 {\n  font-size: 24vw;\n}\n.setup-screen h1 {\n  margin-top: 5px;\n  margin-bottom: 0;\n  font-size: 24vw;\n}\n\n\n.file-info {\n  font-family: monospace;\n  font-size: 15px;\n  position: absolute;\n  bottom: 79px;\n  margin: 0 auto;\n  width: 100%;\n}\n\n.setup-screen h2 {\n  margin-top: 5px;\n}\n\n.setup-screen .menu {\n  position: absolute;\n  bottom: 0;\n  width: 100%;\n  height: 75px;\n}\n\n.menu button {\n  margin-left: 10px;\n}\n\n.start-button, .start-button:hover {\n  background: #6bbb6b;\n}\n\n.game-container { \n  position: absolute;\n  width: 100%;\n  text-align: center;\n  height: 100%;\n  background: #000;\n  margin: -8px;\n}\n\n.category {\n  border: 1px solid #fff;\n  width: 15%;\n  margin: 5px;\n  height: 100%;\n  display: inline-block;\n}\n.title {\n  background: #004e8c;\n  width: 100%;\n  height: 100px; \n}\n\ntable {\n  font-family: 'Archivo Black', sans-serif;\n  color: #fff;\n  width: 100%;\n  height: 100%;\n  table-layout: fixed;\nborder-collapse: separate;\n           border-spacing: 5px;\n}\n\n\nth, td {\n  box-shadow: 0 0 5px #000000 inset;\n  text-shadow: 2px 2px #000;\n  text-transform: uppercase;\n  font-size: 20px;\n  text-align: center;\n  vertical-align: middle;\n  background: #0d6bb6;\n}\n\nth {\n  padding: 20px 0 20px 0;\n}\n\ntd {\n  cursor: default;\n  color: #c68b33;\n  text-shadow: darkgoldenrod;\n  font-size: 35px;\n  text-shadow: 2px 2px 5px #000;\n}\n\ntd:hover {\n  background: #147bce;\n  color: #e7a646;\n}\n\nbutton {\n  cursor: pointer;\n  margin-top: 10px;\n  margin-right: 5px;\n  height: 35px;\n  min-width: 100px;\n  background: #e7a646;\n  color: #383838;\n  border: none;\n  font-size: 14px;\n  border-radius: 3px;\n  -webkit-appearance: none;\n}\nbutton:hover { background: #f1ba69; }\n\n.disabled-button, .disabled-button:hover {\n  background: #0d6bb6;\n  color: #004e8c;\n  cursor: default;\n  pointer-events: none;\n}\n\ninput[type=\"text\"], textarea {\n  padding-left: 7px;\n  height: 25px;\n  border-radius: 4px;\n  border: 1px solid #ddd;\n  font-size: 14px;\n  color: #545454;\n  margin-top: 10px;\n}\n\n.question {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n  padding: 20px 50px 20px 50px;\n}\n\n.admin-pannel {\n  background: #fff;\n  padding: 10px;\n  font-family: Helvetica Neue, sans-serif;\n}\n\n.admin-pannel .players {\n  text-align: center;\n  border: 1px solid #545454;\n  border-radius: 2px;\n  bottom: 10px;\n  width: 97%;\n  position: absolute; \n}\n\n.players-disabled {\n  pointer-events: none;\n  opacity: 0.2;\n}\n\n\n.player-text {\n  font-family: 'Permanent Marker', cursive;\n  margin: 0;\n  color: #fff;\n}\n\n.scoreboard .player-text {\n  border-bottom: 2px solid #f1ba69;\n  font-size: 20px;\n}\n\n.scoreboard .score {\n  font-family: 'Archivo Black', sans-serif;\n  font-size: 20px;\n  color: #fff;\n}\n\n.scoreboard .player {\n  background: #0d6bb6;\n  width: 180px;\n  box-shadow: 0 0 5px #000000 inset;\n  padding: 5px;\n  text-align: center;\n  margin: 3px;\n}\n\n.admin-pannel .current-question p {\n  font-size: 25px;\n}\n\n.players span {\n  width: 100px;\n  display: inline-block;\n  text-align: center;\n}\n\n.players div {\n  height: 50px;\n  line-height: 50px;\n}\n.correct-button {\n  background: #58b158;\n}\n.correct-button:hover {\n  background: #67d067;\n}\n.incorrect-button {\n  background: #dc5050;\n}\n.incorrect-button:hover {\n  background: #f95a5a;\n}\n\n.disabled {\n  background: #757575;\n}\n.disabled button {\n  color: #757575;\n  background: #757575;\n  pointer-events: none;\n}\n\n.message {\n  text-align: center;\n  height: 100px;\n  color: #2d612d;\n  margin: -10px;\n  line-height: 50px;\n  background: #58b158;\n}\n\n.wager-box {\n  text-align: center;\n  background: #ffffff;\n  color: #000;\n  font-size: 14px;\n  font-family: sans-serif;\n  margin-top: 5px;\n  border: 4px solid #004e8c;\n  border-radius: 4px;\n  text-shadow: none;\n  padding: 5px;\n  width: 300px;\n  margin: 0 auto;\n}\n\n.wager-box button, .wager-box button:hover {\n  background:  #58b158;\n}\n\n.final-jeopardy {\n  font-family: 'Korinna Bold', sans-serif;\n  background: #147bce;\n  color: #fff;\n  font-size: 35px;\n  text-transform: uppercase;\n  text-shadow: 2px 2px 5px #000;\n  height: 100%;\n}\n\n.edit-screen {\n  background: #fff;\n  font-family: 'Archivo Black', sans-serif;\n  text-align: center;\n  height: 100%;\n}\n\n.edit-screen input {\n  width: 300px;\n}\n\n.question-buttons {\n  padding: 10px 0 5px 0;\n}\n\n.edit-question {\n  border-radius: 2px;\n  margin: 5px;\n  cursor: pointer;\n  text-align: center;\n  padding: 5px;\n  background: #147bce;\n  color: #a6d7ff;\n  width: 85px;\n  display: inline-block;\n}\n\n@keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: none; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n@-webkit-keyframes blink {\n    0% { box-shadow: 0 0 15px #a6d7ff; }\n    50% { box-shadow: 0 0 0; }\n    100% { box-shadow: 0 0 15px #a6d7ff; }\n}\n\n.blink {\n    -webkit-animation: blink 1.0s linear infinite;\n    -moz-animation: blink 1.0s linear infinite;\n    -ms-animation: blink 1.0s linear infinite;\n    -o-animation: blink 1.0s linear infinite;\n    animation: blink 1.0s linear infinite;\n}\n\n.edit-screen .category-section {\n  text-align: center;\n}\n\n.tab-container {\n  border-bottom: 5px solid #ddd;\n}\n.tab {\n  margin-right: 10px;\n  text-transform: uppercase;\n  cursor: pointer;\n  padding: 3px 3px 0 3px;\n  color: #545454;\n}\n.tab:hover {\n  background: aliceblue;\n  color: #0d6bb6;\n}\n\n.cancel {\n  background: #ddd;\n}\n.cancel:hover {\n  background: #ddd !important;\n}\n\n.edit-screen h4 {\n  text-transform: uppercase;\n}\n\n.back-button {\n  position: fixed;\n  background: #a6d7ff;\n  top: 10px;\n  cursor: pointer;\n  left: 10px;\n  line-height: 90px;\n  text-align: center;\n  border-radius: 50%;\n  color: #fff;\n  height: 90px;\n  width: 90px;\n  box-shadow: 0 0 17px #757575;\n}\n.back-button:hover {\n  background: #8ec2ec;\n}\n", ""]);
 
 // exports
 

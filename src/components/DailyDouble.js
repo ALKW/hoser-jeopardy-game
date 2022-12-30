@@ -19,9 +19,12 @@ export default props => {
                     placeholder={"Up to $" + props.playerPoints} />
                 <div>
                     <button onClick={(event) => {
-                        if (wager > props.playerPoints || wager === Number.NaN) {
-                            alert(`${props.playerName} cannot wager more than ${props.playerPoints}.`)
-                        } else {
+                        if (wager > props.playerPoints || isNaN(wager)) {
+                            alert(`${props.playerName} cannot wager more than ${props.playerPoints}.`);
+                        } else if (isNaN(wager)) {
+                            alert(`What are you doing? ${wager} is not a number you idiot`);
+                        }
+                        else {
                             props.openQuestion(props.category, props.question.value, false /* isDailyDouble */, wager);
                         }
                     }}>

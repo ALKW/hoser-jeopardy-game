@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { ipcRenderer } from  'electron';
+import { ipcRenderer } from 'electron';
 import { hashHistory } from 'react-router';
 
 import Players from './Players';
@@ -28,14 +28,18 @@ class Setup extends Component {
   }
 
   onStartGame() {
+    const dailyDoubleCol = Math.floor(Math.random() * 6);
+    const dailyDoubleRow = Math.floor(Math.random() * 5);
     ipcRenderer.send('launch-admin-pannel', {
-      players: this.props.players.map(player => {return player.name})
+      players: this.props.players.map(player => { return player.name }),
+      dailyDoubleCol,
+      dailyDoubleRow
     });
     ipcRenderer.send('launch-scoreboard', {
       players: this.props.players
     });
     this.props.loadGameData(this.state.data);
-    hashHistory.push('/play');
+    hashHistory.push({ pathname: '/play', query: { dailyDoubleCol, dailyDoubleRow } });
   }
 
   onLoadGame() {
@@ -43,12 +47,12 @@ class Setup extends Component {
   }
 
   createGame() {
-    this.setState({creatingGame: true });
+    this.setState({ creatingGame: true });
     hashHistory.push('/edit');
   }
 
   loadFileListener(event, data) {
-    if (data.fileContents){
+    if (data.fileContents) {
       try {
         this.setState({
           data: JSON.parse(data.fileContents),
@@ -67,13 +71,13 @@ class Setup extends Component {
           <div className='setup-screen'>
             <h2>HOSER JEOPARDY!</h2>
             <Players />
-            <br/>
+            <br />
             <div className='file-info'>Game file: {this.state.gameName || '--'}</div>
             <div className='menu'>
               <button className='load-game' onClick={this.onLoadGame}>Load Game</button>
               <button className='create-game' onClick={this.createGame}>Create/Edit Game</button>
-              <button className={this.state.data && this.props.players.length > 1 ? 'start-button': 'disabled-button'}
-                      onClick={this.onStartGame}>Play!</button>
+              <button className={this.state.data && this.props.players.length > 1 ? 'start-button' : 'disabled-button'}
+                onClick={this.onStartGame}>Play!</button>
             </div>
           </div>
         }

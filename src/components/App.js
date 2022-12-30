@@ -39,16 +39,13 @@ const getCategories = (categories) => {
 class App extends Component {
   constructor(props) {
     super(props);
-    const row = Math.floor(Math.random() * 5);
-    const col = Math.floor(Math.random() * 6);
     this.state = {
       showQuestion: false,
       // Rows and columns start at 0
-      dailyDoubleCol: col,
-      dailyDoubleRow: row,
+      dailyDoubleCol: parseInt(this.props.location.query.dailyDoubleCol),
+      dailyDoubleRow: parseInt(this.props.location.query.dailyDoubleRow),
     };
     this.openQuestion = this.openQuestion.bind(this);
-    /*this.closeQuestion = this.closeQuestion.bind(this);*/
 
     ipcRenderer.on('update-score', (event, data) => {
       this.props.updateScore(data.value, data.player, this.state.category, this.state.showQuestion);
@@ -77,14 +74,11 @@ class App extends Component {
 
   openQuestion(category, value, isDailyDouble, wager) {
     const question = this.props.game[this.props.currentVersion].categories[category].find(question => question.value === value);
-    if(wager){
-      question.value = parseInt(wager);
-    }
 
     this.setState({ showQuestion: question, category, isDailyDouble });
     /* send answer to admin pannel */
 
-    ipcRenderer.send('send-answer-to-admin', { ...question, lastCorrectPlayer: this.props.lastCorrectPlayer });
+    ipcRenderer.send('send-answer-to-admin', { ...question, wager: parseInt(wager), isDailyDouble, lastCorrectPlayer: this.props.lastCorrectPlayer });
   }
 
 
@@ -115,7 +109,7 @@ class App extends Component {
             />
           </table>
         }
-        {!isDailyDouble && showQuestion && <Question question={this.state.showQuestion} closeQuestion={this.closeQuestion} />}
+        {!isDailyDouble && showQuestion && <Question question={this.state.showQuestion} />}
         {isDailyDouble && showQuestion && <DailyDouble openQuestion={this.openQuestion} question={this.state.showQuestion} category={category} playerName={playerName} playerPoints={playerPoints} />}
       </div>
     );
