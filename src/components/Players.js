@@ -11,10 +11,15 @@ class Players extends Component {
   }
 
   handleInput(event) {
+    // enter key press
     if (event.keyCode === 13) {
-      /* enter key press */
-      this.props.addPlayer(event.target.value);
-      event.target.value = '';
+      if (event.target.value === '') {
+        alert("Please enter a non empty player name");
+      } else {
+        this.props.addPlayer(event.target.value);
+        event.target.value = '';
+      }
+
     }
   }
 
