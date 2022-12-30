@@ -78,7 +78,11 @@ class App extends Component {
     this.setState({ showQuestion: question, category, isDailyDouble });
     /* send answer to admin pannel */
 
-    ipcRenderer.send('send-answer-to-admin', { ...question, wager: parseInt(wager), isDailyDouble, lastCorrectPlayer: this.props.lastCorrectPlayer });
+    if(wager){
+      wager = isFinite(wager) ? parseInt(wager) : -1;
+    }
+
+    ipcRenderer.send('send-answer-to-admin', { ...question, wager, isDailyDouble, lastCorrectPlayer: this.props.lastCorrectPlayer });
   }
 
 

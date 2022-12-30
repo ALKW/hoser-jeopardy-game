@@ -47,7 +47,7 @@ app.on('ready', function() {
       question: args.question,
       answer: args.answer,
       value: args.value,
-      wager: isFinite(args.wager) ? args.wager : -1,
+      wager: args.wager,
       isDailyDouble: args.isDailyDouble,
       lastCorrectPlayer: args.lastCorrectPlayer
     });
