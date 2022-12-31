@@ -29,7 +29,7 @@ export default props => {
   return (
     <div className='question'>
       {questionType === "text" && <span>{props.question.question}</span>}
-      {questionType === "video" && <iframe width="960" height="540" src={props.question.youtubeLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>}
+      {questionType === "video" && <iframe width="80%" height="80%" src={props.question.youtubeLink} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>}
       {questionType === "image" && <img src={props.question.imageLink} alt="Your Link is Fucked Up dude"></img>}
     </div>
   );
