@@ -67,7 +67,7 @@ const appReducer = (state = INITIAL_STATE, action) => {
 
     case UPDATE_QUESTION:
       const questionIndex = state.game[state.currentVersion].categories[action.categoryIndex].findIndex(question => {
-        return question.question === action.question.question;
+        return question.value === action.question.value;
       });
       const categories = state.game[state.currentVersion].categories;
       categories[action.categoryIndex][questionIndex] = {
